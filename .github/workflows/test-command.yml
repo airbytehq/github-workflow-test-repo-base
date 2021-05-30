@@ -1,5 +1,6 @@
 name: integration-test
 on:
+  push:
   workflow_dispatch:
     inputs:
       connector:

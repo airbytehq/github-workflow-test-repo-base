@@ -29,7 +29,7 @@ jobs:
       - name: Checkout Airbyte
         uses: actions/checkout@v2
         with:
-          repository: ${{github.event.pull_request.head.repo.full_name}} # always use the branch's repository
+          repository: davinchia/github-workflow-test-repo-base # always use the branch's repository
           fetch-depth: 0
           ref: ${{github.event.pull_request.head.ref}}
       - uses: actions/setup-java@v1

@@ -3,6 +3,13 @@ on:
   push:
   workflow_dispatch:
     inputs:
+      connector:
+        description: 'Airbyte Connector'
+        required: true
+      fork:
+        description: 'Name of Fork to run build on'
+        required: false
+        default: 'airbytehq/github-workflow-test-repo-base'
       comment-id:
         description: 'The comment-id of the slash command. Used to update the comment with the status.'
         required: false
@@ -25,11 +32,11 @@ jobs:
           echo "print out the event json"
           cat /home/runner/work/_temp/_github_workflow/event.json
           echo "github var"
-          echo ${{github.event.pull_request.head.repo.full_name}}
+          echo ${{ github.event.inputs.fork }}
       - name: Checkout Airbyte
         uses: actions/checkout@v2
         with:
-          repository: davinchia/github-workflow-test-repo-base # always use the branch's repository
+          repository: $ {{ github.event.inputs.fork }} # always use the branch's repository
           fetch-depth: 0
           ref: ${{github.event.pull_request.head.ref}}
       - uses: actions/setup-java@v1

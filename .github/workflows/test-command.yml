@@ -24,6 +24,8 @@ jobs:
           env 
           echo "print out the event json"
           cat /home/runner/work/_temp/_github_workflow/event.json
+          echo "github var"
+          echo ${{github.event.pull_request.head.repo.full_name}}
       - name: Checkout Airbyte
         uses: actions/checkout@v2
         with:

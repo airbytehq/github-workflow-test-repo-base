@@ -36,7 +36,7 @@ jobs:
       - name: Checkout Airbyte
         uses: actions/checkout@v2
         with:
-          repository: $ {{ github.event.inputs.fork }} # always use the branch's repository
+          repository: ${{ github.event.inputs.fork }} # always use the branch's repository
           fetch-depth: 0
           ref: ${{github.event.pull_request.head.ref}}
       - uses: actions/setup-java@v1

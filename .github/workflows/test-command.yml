@@ -22,6 +22,7 @@ jobs:
         run: |
           echo "printing"
           env 
+          echo "print out the event json"
           cat /home/runner/work/_temp/_github_workflow/event.json
       - name: Checkout Airbyte
         uses: actions/checkout@v2

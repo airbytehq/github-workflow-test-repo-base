@@ -1,0 +1,47 @@
+name: Raise a PR
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Please choose the type of version upgrade : major|minor|patch"
+        required: true
+        default: "patch"
+
+jobs:
+  releaseAirbyte:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+      - uses: actions/checkout@v2
+
+      - name: Bump version
+        id: bump_version
+        env:
+            VERSION: ${{ github.event.inputs.version }}
+        run: |
+          ./bump_version.sh
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.SELF_RUNNER_GITHUB_ACCESS_TOKEN }}
+          branch: bump-version
+          branch-suffix: random
+          delete-branch: true
+
+      - name: Auto approve
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        uses: juliangruber/approve-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.SELF_RUNNER_GITHUB_ACCESS_TOKEN }}
+          number: ${{ steps.cpr.outputs.pull-request-number }}
+
+      - name: Enable Pull Request Automerge
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v1
+        with:
+          token: ${{ secrets.SELF_RUNNER_GITHUB_ACCESS_TOKEN }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
+

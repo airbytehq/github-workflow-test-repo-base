@@ -41,3 +41,9 @@ jobs:
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
+      - name: Next Steps
+        run: |
+          echo "Steps After Merging PR"
+          echo "1. Switch to master"
+          echo "2. Run ./tools/bin/tag_version.sh"
+          echo "3. Create a GitHub release with the changelog"

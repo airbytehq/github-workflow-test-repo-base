@@ -34,11 +34,9 @@ jobs:
           echo ::set-output name=NEW_VERSION::$(grep VERSION version.txt | cut -d"=" -f2)
       - name: Get PR Body
         id: pr_body
-        outputs:
-          pr_body:
-            description: 'The PR body'
         run: |
           ./test-bash.sh
+          echo ::set-output name=PR_BODY::$(./test-bash.sh)
 #          newline="\n"
 #          changelog="Changelog:"
 #          commits=$(PAGER=cat git log 206793dfd3d863d484851f4b7fae0e87cd87a8f0..${{ steps.git_revision.outputs.GIT_REVISION }} --oneline --decorate=no)

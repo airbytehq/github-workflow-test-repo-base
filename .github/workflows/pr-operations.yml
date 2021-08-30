@@ -18,10 +18,6 @@ jobs:
         id: old_version
         run: |
           echo ::set-output name=OLD_VERSION::$(grep VERSION version.txt | cut -d"=" -f2)
-      - name: Save GIT Revision
-        id: git_revision
-        run: |
-          echo ::set-output name=GIT_REVISION::$(git rev-parse HEAD)
       - name: Release Airbyte
         id: release_airbyte
         env:
@@ -34,19 +30,13 @@ jobs:
           echo ::set-output name=NEW_VERSION::$(grep VERSION version.txt | cut -d"=" -f2)
       - name: Get PR Body
         id: pr_body
+        env:
+          PREV_VERSION: ${{ steps.old_version.outputs.OLD_VERSION }}
         run: |
           chmod +x test-bash.sh
           body=$(./test-bash.sh)
           body="${body//$'\n'/'%0A'}"
           echo ::set-output name=PR_BODY::$body
-#          ./test-bash.sh
-#          newline="\n"
-#          changelog="Changelog:"
-#          commits=$(PAGER=cat git log 206793dfd3d863d484851f4b7fae0e87cd87a8f0..${{ steps.git_revision.outputs.GIT_REVISION }} --oneline --decorate=no)
-#          after_steps=$(cat pr-body.txt)
-#          body=$changelog$newline$commits$newline$after_steps
-#          echo ::set-output name=PR_BODY::$body
-#          echo ::set-output name=PR_BODY::$(PAGER=cat git log 206793dfd3d863d484851f4b7fae0e87cd87a8f0..${{ steps.git_revision.outputs.GIT_REVISION }} --oneline --decorate=no)
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v3

@@ -26,9 +26,9 @@ jobs:
           branch: bump-version
           branch-suffix: random
           delete-branch: true
-          title: Bump Airbyte ${{ github.event.inputs.partToBump }} version to $(grep VERSION version.txt | cut -d"=" -f2)
-          body: Bump Airbyte ${{ github.event.inputs.partToBump }} version to $(grep VERSION version.txt | cut -d"=" -f2)
-          commit-message: Bump Airbyte ${{ github.event.inputs.partToBump }} version to $(grep VERSION version.txt | cut -d"=" -f2)
+          title: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ grep VERSION version.txt | cut -d"=" -f2 }}
+          body: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ grep VERSION version.txt | cut -d"=" -f2 }}
+          commit-message: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ grep VERSION version.txt | cut -d"=" -f2 }}
       - name: PR Details
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"

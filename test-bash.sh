@@ -2,11 +2,14 @@
 
 set -e
 
-newline="\n"
-changelog="Changelog:"
-commits=$(PAGER=cat git log 206793dfd3d863d484851f4b7fae0e87cd87a8f0..2295dd98eb55faf22736cbbbb0e5e6534c2b3a63 --oneline --decorate=no)
-after_steps=$(cat pr-body.txt)
-body=$changelog$newline$commits$newline$after_steps
+GIT_REVISION=$(git rev-parse HEAD)
+[[ -z "$GIT_REVISION" ]] && echo "Couldn't get the git revision..." && exit 1
 
-#echo $body
-printf $body
+echo "Changelog:"
+echo
+PAGER=cat git log 206793dfd3d863d484851f4b7fae0e87cd87a8f0..${GIT_REVISION} --oneline --decorate=no
+echo
+echo "Steps After Merging PR:"
+echo "1. Pull most recent version of master"
+echo "2. Run ./tools/bin/tag_version.sh"
+echo "3. Create a GitHub release with the changelog"

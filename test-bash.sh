@@ -8,4 +8,5 @@ commits=$(PAGER=cat git log 206793dfd3d863d484851f4b7fae0e87cd87a8f0..2295dd98eb
 after_steps=$(cat pr-body.txt)
 body=$changelog$newline$commits$newline$after_steps
 
-echo $body
+#echo $body
+printf $body

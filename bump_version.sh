@@ -2,7 +2,7 @@
 
 set -e
 
-PART_TO_BUMP=$VERSION
+#PART_TO_BUMP=$VERSION
 [[ -z "$PART_TO_BUMP" ]] && echo "Usage ./bump_version.sh (major|minor|patch)" && exit 1
 
 # uses .bumpversion.cfg to find files to bump

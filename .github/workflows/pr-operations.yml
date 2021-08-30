@@ -1,8 +1,8 @@
-name: Raise a PR
+name: Release Open Source Airbyte
 on:
   workflow_dispatch:
     inputs:
-      version:
+      partToBump:
         description: "Please choose the type of version upgrade : major|minor|patch"
         required: true
         default: "patch"
@@ -12,10 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Bump version
-        id: bump_version
+      - name: Release Airbyte
+        id: release_airbyte
         env:
-            VERSION: ${{ github.event.inputs.version }}
+          PART_TO_BUMP: ${{ github.event.inputs.partToBump }}
         run: |
           ./bump_version.sh
       - name: Create Pull Request
@@ -26,16 +26,10 @@ jobs:
           branch: bump-version
           branch-suffix: random
           delete-branch: true
-#      - name: Auto approve
-#        if: steps.cpr.outputs.pull-request-operation == 'created'
-#        uses: juliangruber/approve-pull-request-action@v1
-#        with:
-#          github-token: ${{ secrets.SUBODH_GITHUB_ACCESS_TOKEN }}
-#          number: ${{ steps.cpr.outputs.pull-request-number }}
-      - name: Enable Pull Request Automerge
-        if: steps.cpr.outputs.pull-request-operation == 'created'
-        uses: peter-evans/enable-pull-request-automerge@v1
-        with:
-          token: ${{ secrets.SUBODH_GITHUB_ACCESS_TOKEN }}
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-          merge-method: squash
+          title: Bump Airbyte version - ${{ github.event.inputs.partToBump }}
+          body: Bump Airbyte version - ${{ github.event.inputs.partToBump }}
+          commit-message: Bump Airbyte version - ${{ github.event.inputs.partToBump }}
+      - name: PR Details
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"

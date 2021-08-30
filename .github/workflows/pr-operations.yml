@@ -37,6 +37,7 @@ jobs:
         run: |
           chmod +x test-bash.sh
           body=$(./test-bash.sh)
+          body="${body//$'\n'/'%0A'}"
           echo ::set-output name=PR_BODY::$body
 #          ./test-bash.sh
 #          newline="\n"

@@ -35,6 +35,7 @@ jobs:
       - name: Get PR Body
         id: pr_body
         run: |
+          chmod +x test-bash.sh
           body=$(./test-bash.sh)
           echo ::set-output name=PR_BODY::$body
 #          ./test-bash.sh

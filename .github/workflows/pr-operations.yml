@@ -18,6 +18,9 @@ jobs:
           PART_TO_BUMP: ${{ github.event.inputs.partToBump }}
         run: |
           ./bump_version.sh
+      - name: Find new version
+        id: new_version
+        run: echo '::set-output name=NEW_VERSION::$(grep VERSION version.txt | cut -d"=" -f2)'
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v3
@@ -26,9 +29,9 @@ jobs:
           branch: bump-version
           branch-suffix: random
           delete-branch: true
-          title: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ grep VERSION version.txt | cut -d"=" -f2 }}
-          body: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ grep VERSION version.txt | cut -d"=" -f2 }}
-          commit-message: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ grep VERSION version.txt | cut -d"=" -f2 }}
+          title: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ steps.new_version.outputs.NEW_VERSION }}
+          body: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ steps.new_version.outputs.NEW_VERSION }}
+          commit-message: Bump Airbyte ${{ github.event.inputs.partToBump }} version to ${{ steps.new_version.outputs.NEW_VERSION }}
       - name: PR Details
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"

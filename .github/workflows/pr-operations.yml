@@ -20,7 +20,8 @@ jobs:
           ./bump_version.sh
       - name: Find new version
         id: new_version
-        run: echo '::set-output name=NEW_VERSION::$(grep VERSION version.txt | cut -d"=" -f2)'
+        run: |
+          echo ::set-output name=NEW_VERSION::$(grep VERSION version.txt | cut -d"=" -f2)
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v3

@@ -35,7 +35,7 @@ jobs:
         run: |
           newline="\n"
           changelog="Changelog:"
-          commits=$(PAGER=cat git log v${{ steps.old_version.outputs.OLD_VERSION }}..${{ steps.git_revision.outputs.GIT_REVISION }} --oneline --decorate=no)
+          commits=$(PAGER=cat git log 206793dfd3d863d484851f4b7fae0e87cd87a8f0..${{ steps.git_revision.outputs.GIT_REVISION }} --oneline --decorate=no)
           after_steps=$(cat pr-body.txt)
           body=$changelog$newline$commits$newline$after_steps
           echo ::set-output name=PR_BODY::$body

@@ -35,7 +35,8 @@ jobs:
       - name: Get PR Body
         id: pr_body
         run: |
-          echo ::set-output name=PR_BODY::./test-bash.sh
+          body=$(./test-bash.sh)
+          echo ::set-output name=PR_BODY::$body
 #          ./test-bash.sh
 #          newline="\n"
 #          changelog="Changelog:"

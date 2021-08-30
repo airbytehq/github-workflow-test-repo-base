@@ -16,6 +16,10 @@ jobs:
         id: old_version
         run: |
           echo ::set-output name=OLD_VERSION::$(grep VERSION version.txt | cut -d"=" -f2)
+      - name: Save GIT Revision
+        id: git_revision
+        run: |
+          echo ::set-output name=GIT_REVISION::$(git rev-parse HEAD)
       - name: Release Airbyte
         id: release_airbyte
         env:
@@ -26,6 +30,15 @@ jobs:
         id: new_version
         run: |
           echo ::set-output name=NEW_VERSION::$(grep VERSION version.txt | cut -d"=" -f2)
+      - name: Get PR Body
+        id: pr_body
+        run: |
+          newline="\n"
+          changelog="Changelog:"
+          commits=$(PAGER=cat git log v${{ steps.old_version.outputs.OLD_VERSION }}..${{ steps.git_revision.outputs.GIT_REVISION }} --oneline --decorate=no)
+          after_steps=$(cat pr-body.txt)
+          body=$changelog$newline$commits$newline$after_steps
+          echo ::set-output name=PR_BODY::$body
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v3
@@ -35,15 +48,9 @@ jobs:
           branch-suffix: random
           delete-branch: true
           title: Bump Airbyte version from ${{ steps.old_version.outputs.OLD_VERSION }} to ${{ steps.new_version.outputs.NEW_VERSION }}
-          body: Bump Airbyte version from ${{ steps.old_version.outputs.OLD_VERSION }} to ${{ steps.new_version.outputs.NEW_VERSION }}
+          body: ${{ steps.pr_body.outputs.PR_BODY }}
           commit-message: Bump Airbyte version from ${{ steps.old_version.outputs.OLD_VERSION }} to ${{ steps.new_version.outputs.NEW_VERSION }}
       - name: PR Details
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
-      - name: Next Steps
-        run: |
-          echo "Steps After Merging PR"
-          echo "1. Switch to master"
-          echo "2. Run ./tools/bin/tag_version.sh"
-          echo "3. Create a GitHub release with the changelog"

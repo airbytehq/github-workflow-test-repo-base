@@ -1,0 +1,4 @@
+Steps After Merging PR:
+1. Pull most recent version of master
+2. Run ./tools/bin/tag_version.sh
+3. Create a GitHub release with the changelog

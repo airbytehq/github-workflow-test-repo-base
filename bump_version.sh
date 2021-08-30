@@ -17,3 +17,16 @@ GIT_REVISION=$(git rev-parse HEAD)
 
 echo "Bumped version to ${NEW_VERSION}"
 echo "Building and publishing version $NEW_VERSION for git revision $GIT_REVISION..."
+
+echo
+echo "Changelog:"
+PAGER=cat git log 206793dfd3d863d484851f4b7fae0e87cd87a8f0..${GIT_REVISION} --oneline --decorate=no
+
+
+echo
+echo "Final Steps:"
+echo "1. Push your changes"
+echo "2. Merge your PR"
+echo "3. Switch to master"
+echo "4. Run ./tools/bin/tag_version.sh"
+echo "5. Create a GitHub release with the changelog"

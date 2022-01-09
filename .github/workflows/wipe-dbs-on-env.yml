@@ -1,0 +1,68 @@
+name: Wipe Firebase and empty database tables
+
+on:
+  schedule:
+    - cron: '30 12 12,13,14,15,16,17,18,22,23,24,25,26,27,28 * *'
+  workflow_dispatch:
+    inputs:
+      env_name:
+        description: "Environment Name (infra-dev, dev, dev-1, dev-2, frontend-dev, stage)"
+        required: true
+        default: "dev"
+jobs:
+  clean-db-objects:
+    name: Wipe DB objects
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Parsing Environment SA
+        id: env-sa
+        run: |-
+          set -e
+          case "${{ github.event.inputs.env_name }}" in
+          infra-dev|dev|dev-1|dev-2|frontend-dev)
+              GCP_SA_KEY="${{ secrets.DEV_GCP_SA_KEY }}"
+              ;;
+          stage)
+              GCP_SA_KEY="${{ secrets.STAGE_GCP_SA_KEY }}"
+              ;;
+          *)
+              echo "*** Unexpected env_name: ${{ github.event.inputs.env_name }} ***"
+              exit 1
+          esac
+          echo "::set-output name=gcp_sa_key::${GCP_SA_KEY}"
+
+      - name: Auth Google Cloud SDK
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: '${{ steps.env-sa.outputs.gcp_sa_key }}'
+
+      - name: Set Up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+
+      - name: Delete users from the Firebase
+        shell: bash
+        run: gcloud info
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: help
+        env:
+          GCP_SA_KEY: ${{ steps.env-sa.outputs.gcp_sa_key }}
+
+
+#    - name: Remove DB tables
+#      uses: akanieski/setup-postgres-cli@v1
+#      with:
+#        password: ${{ secrets.GSP_PG_PASSWORD }}
+#        command: psql -U user -h 127.0.0.1 -p 5432 > backup.sql
+
+#    - name:  Wipe DB objects
+#      id: wipe
+#      shell: bash
+#      uses: ./.github/actions/wipe
+#      with:
+#        env_name: ${{ github.event.inputs.env_name }}

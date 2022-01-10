@@ -1,0 +1,193 @@
+name: ''
+description: 'Deploy Helm Chart to GKE Cluster'
+inputs:
+  env_name:
+    required: true
+  gcp_sa_key:
+    required: true
+
+  oss_version:
+    required: false
+  cloud_version:
+    required: false
+  tag_server:
+    required: false
+  tag_cloud_server:
+    required: false
+  tag_cloud_partner_server:
+    required: false
+  tag_webapp:
+    required: false
+  tag_billing:
+    required: false
+  namespace:
+    required: true
+    default: "ab"
+  helm_release_name:
+    required: true
+    default: "airbyte"
+  helm_atomic_upgrade:
+    required: true
+    default: "true"
+
+  log_level:
+    description: "Log level the app should be deployed at (optional -- defaults to INFO) (FATAL, CRITICAL, ERROR, WARN, WARNING, INFO, DEBUG, TRACE) (case insensitive)"
+    required: false
+    default: "INFO"
+  dry_run:
+    required: true
+    default: "true"
+
+
+outputs:
+  oss_version:
+    value: ${{ steps.variables.outputs.oss_version }}
+  tag_server:
+    value: ${{ steps.variables.outputs.tag_server }}
+  tag_cloud_server:
+    value: ${{ steps.variables.outputs.tag_cloud_server }}
+  tag_cloud_partner_server:
+    value: ${{ steps.variables.outputs.tag_cloud_partner_server }}
+  tag_webapp:
+    value: ${{ steps.variables.outputs.tag_webapp }}
+  tag_billing:
+    value: ${{ steps.variables.outputs.tag_billing }}
+  branch_name:
+    value: ${{ steps.variables.outputs.branch_name }}
+
+  log_level:
+    value: ${{ steps.variables.outputs.log_level }}
+  dry_run:
+    value: ${{ steps.variables.outputs.dry_run }}
+
+
+runs:
+  using: "composite"
+  steps:
+    - id: variables
+      run: |-
+        echo "::set-output name=gcp_bastion_host::${{ inputs.env_name }}-bastion"
+        echo "::set-output name=branch_name::${GITHUB_REF#refs/heads/}"
+        echo "::set-output name=log_level::$(echo ${{ inputs.log_level }} | tr '[:lower:]' '[:upper:]')"
+
+        [[ "${{ inputs.oss_version }}" != '' ]] && OSS_Version=${{ inputs.oss_version }} \
+                    || OSS_Version="$(grep AIRBYTE_VERSION .env | awk -F= '{print $2}')"
+        echo "::set-output name=oss_version::$OSS_Version"
+
+        [[ "${{ inputs.cloud_version }}" != '' ]] && cloud_version=${{ inputs.cloud_version }} \
+                    || cloud_version=$(git rev-parse --short HEAD)
+        [[ "${{ inputs.tag_server }}" != '' ]] && echo "::set-output name=tag_server::${{ inputs.tag_server }}" \
+                    || echo "::set-output name=tag_server::$cloud_version"
+        [[ "${{ inputs.tag_cloud_server }}" != '' ]] && echo "::set-output name=tag_cloud_server::${{ inputs.tag_cloud_server }}" \
+                    || echo "::set-output name=tag_cloud_server::$cloud_version"
+        [[ "${{ inputs.tag_cloud_partner_server }}" != '' ]] && echo "::set-output name=tag_cloud_partner_server::${{ inputs.tag_cloud_partner_server }}" \
+                    || echo "::set-output name=tag_cloud_partner_server::$cloud_version"
+        [[ "${{ inputs.tag_webapp }}" != '' ]] && echo "::set-output name=tag_webapp::${{ inputs.tag_webapp }}" \
+                    || echo "::set-output name=tag_webapp::${OSS_Version}-cloud-${{ inputs.env_name }}-${cloud_version}"
+        [[ "${{ inputs.tag_billing }}" != '' ]] && echo "::set-output name=tag_billing::${{ inputs.tag_billing }}" \
+                           || echo "::set-output name=tag_billing::$cloud_version"
+
+        [[ "${{ inputs.dry_run }}" != "false" ]] \
+                    && { echo "::set-output name=helm_dry_run_flag::--dry-run"; echo "::set-output name=dry_run::true"; } \
+                                                                              || echo "::set-output name=dry_run::false"
+        [[ "${{ inputs.helm_atomic_upgrade }}" == "true" ]] \
+                    && echo "::set-output name=helm_atomic_upgrade::--atomic" || echo "::set-output name=helm_atomic_upgrade::"
+      shell: bash
+
+    - name: Print processed Input Parameters
+      shell: bash
+      run: |
+        echo -e "
+                         dry_run: ${{ inputs.dry_run }}
+                        env_name: ${{ inputs.env_name }}
+                       namespace: ${{ inputs.namespace }}
+               helm_release_name: ${{ inputs.helm_release_name }}
+                     oss_version: ${{ inputs.oss_version }}
+                   cloud_version: ${{ inputs.cloud_version }}
+                      tag_server: ${{ inputs.tag_server }}
+                tag_cloud_server: ${{ inputs.tag_cloud_server }}
+        tag_cloud_partner_server: ${{ inputs.tag_cloud_partner_server }}
+                      tag_webapp: ${{ inputs.tag_webapp }}
+  
+                     oss_version: ${{ steps.variables.outputs.oss_version }}
+                      tag_server: ${{ steps.variables.outputs.tag_server }}
+                tag_cloud_server: ${{ steps.variables.outputs.tag_cloud_server }}
+        tag_cloud_partner_server: ${{ steps.variables.outputs.tag_cloud_partner_server }}
+                     tag_billing: ${{ steps.variables.outputs.tag_billing }}
+                      tag_webapp: ${{ steps.variables.outputs.tag_webapp }}
+  
+             OSS version in File: $(grep AIRBYTE_VERSION .env | awk -F= '{print $2}')
+                       log_level: ${{ steps.variables.outputs.log_level }}
+             helm_atomic_upgrade: ${{ steps.variables.outputs.helm_atomic_upgrade }}
+        "
+
+    - name: Preparing Runner
+      uses: ./.github/actions/runner-prepare-for-build
+
+    - name: Initializing Terraform on Environment
+      uses: ./.github/actions/terraform-init
+      with:
+        env_name: ${{ inputs.env_name }}
+        gcp_sa_key: ${{ inputs.gcp_sa_key }}
+
+    - name: Get required Generic Variables from Terraform State
+      id: generic-variables
+      shell: bash
+      run: |-
+        declare -A GenericVariables=(
+            [project_id]="cicd_project" [gke_name]="cicd_gke_name" [gke_location]="cicd_gke_location" [project_zone]="zone")
+    
+        for Variable in ${!GenericVariables[@]}; do
+            Value_from_TF="$(terraform output -raw ${GenericVariables[$Variable]})"
+            echo "::set-output name=$Variable::$Value_from_TF"
+            echo "$Variable = $Value_from_TF"; done
+      working-directory: ./infra/gcp/env/${{ inputs.env_name }}
+    
+    - name: Setup gcloud CLI for the Project in which we are Deploying
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        service_account_key: ${{ inputs.gcp_sa_key }}
+        project_id: ${{ steps.generic-variables.outputs.project_id }}
+        export_default_credentials: true
+    
+    - name: Configure docker to use the gcloud command-line tool as a credential helper
+      shell: bash
+      run: gcloud --quiet auth configure-docker
+    
+    - name: Get the GKE credentials so we can deploy to the cluster
+      uses: google-github-actions/get-gke-credentials@main
+      with:
+        cluster_name: ${{ steps.generic-variables.outputs.gke_name }}
+        location: ${{ steps.generic-variables.outputs.gke_location }}
+        credentials: ${{ inputs.gcp_sa_key }}
+        project_id: ${{ steps.generic-variables.outputs.project_id }}
+        use_internal_ip: true
+    
+    - name: Create IAP tunnel to bastion host
+      shell: bash
+      run: |-
+        gcloud compute ssh --tunnel-through-iap --zone="${{ steps.generic-variables.outputs.project_zone }}" ${{ steps.variables.outputs.gcp_bastion_host }} \
+            --project ${{ steps.generic-variables.outputs.project_id }} -- -N -f -p 22 -D localhost:3000
+    
+    - name: Deploy Helm Chart
+      shell: bash
+      run: |-
+        export https_proxy=socks5://127.0.0.1:3000 && \
+        helm upgrade --install --wait --create-namespace -n ${{ inputs.namespace }} ${{ inputs.helm_release_name }} ./infra/kube/airbyte \
+                     $(find ./infra/gcp/env/${{ inputs.env_name }}/helm/ -type f | sort -r | awk '{ print "--values "$0 }') \
+                     --set global.image.tag=${{ steps.variables.outputs.oss_version }} --set server.image.tag=${{ steps.variables.outputs.tag_server }} \
+                     --set cloud-server.image.tag=${{ steps.variables.outputs.tag_cloud_server }} --set cloud-partner-server.image.tag=${{ steps.variables.outputs.tag_cloud_partner_server }} --set billing.image.tag=${{ steps.variables.outputs.tag_billing }} \
+                     --set webapp.image.tag=${{ steps.variables.outputs.tag_webapp }} \
+                     --set secrets.LOG_LEVEL=${{ steps.variables.outputs.log_level }}  ${{ steps.variables.outputs.helm_atomic_upgrade }}  ${{ steps.variables.outputs.helm_dry_run_flag }}
+    
+    - name: Run Integration Tests
+      uses: ./.github/actions/tests-integration
+      with:
+        env_name: ${{ inputs.env_name }}
+
+    - name: Clean-Up
+      shell: bash
+      run: |-
+        sudo pkill ssh
+        echo "Clearing the ssh-keys in the service account to make additional space..." && \
+        for i in $(gcloud compute os-login ssh-keys list | grep -v FINGERPRINT); do echo $i; gcloud compute os-login ssh-keys remove --key $i; done

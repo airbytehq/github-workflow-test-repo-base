@@ -39,6 +39,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: |
           echo "here~"
+          echo ${{ needs.changes.outputs }}
           echo "${{ needs.changes.outputs.backend }}"
           echo "${{ needs.changes.outputs.frontend }}"
           echo "after"

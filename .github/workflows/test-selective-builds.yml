@@ -7,9 +7,9 @@ jobs:
   changes:
     name: "Detect Modified Files"
     runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
+#    outputs:
+#      backend: ${{ steps.filter.outputs.backend }}
+#      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - name: Checkout Airbyte
         uses: actions/checkout@v2

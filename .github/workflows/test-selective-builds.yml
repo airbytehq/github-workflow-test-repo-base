@@ -33,12 +33,14 @@ jobs:
   # JOB to build and test frontend code
   frontend:
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+#    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: |
           echo "here~"
+          echo ${{ needs.changes.outputs.backend }}
+          echo ${{ needs.changes.outputs.frontend }}
 
   backend-followup:
     needs: backend

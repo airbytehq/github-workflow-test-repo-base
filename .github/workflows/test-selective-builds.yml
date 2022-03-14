@@ -17,8 +17,7 @@ jobs:
         with:
           filters: |
             backend:
-              - 'backend-1/**'
-              - 'backend-2/**'
+              - 'backend-**'
             frontend:
               - 'frontend-1/**'
           list-files: csv

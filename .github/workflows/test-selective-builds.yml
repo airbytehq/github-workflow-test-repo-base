@@ -5,23 +5,19 @@ on:
 
 jobs:
   changes:
-    name: "Detect Modified Files"
     runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
-      - name: Checkout Airbyte
-        uses: actions/checkout@v2
-      - uses: getsentry/paths-filter@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
         id: filter
         with:
           filters: |
-            backend:
-              - 'backend-**'
             frontend:
-              - 'frontend-1/**'
-          list-files: csv
+              - 'frontend-**'
 
   # JOB to build and test backend code
   backend:
@@ -44,6 +40,7 @@ jobs:
           echo "${{ needs.changes.outputs.backend }}"
           echo "${{ needs.changes.outputs.frontend }}"
           echo '${{ toJSON(job) }}'
+          echo '${{ toJSON(needs) }}'
           echo '${{ toJSON(needs.outputs) }}'
           echo "after"
 

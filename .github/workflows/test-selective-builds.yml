@@ -25,7 +25,7 @@ jobs:
   # JOB to build and test backend code
   backend:
     needs: changes
-    if: steps.changes.outputs.backend == 'true'
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
   # JOB to build and test frontend code
   frontend:
     needs: changes
-    if: steps.changes.outputs.frontend == 'true'
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

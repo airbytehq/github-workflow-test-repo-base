@@ -1,0 +1,46 @@
+name: Airbyte CI - Platform
+
+on:
+  push:
+
+jobs:
+  changes:
+    name: "Detect Modified Files"
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout Airbyte
+        uses: actions/checkout@v2
+      - uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            backend:
+              - 'backend-1/**'
+              - 'backend-2/**'
+            frontend:
+              - 'frontend-1/**'
+          list-files: csv
+
+  # JOB to build and test backend code
+  backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+  # JOB to build and test frontend code
+  frontend:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+  backend-followup:
+    needs: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2

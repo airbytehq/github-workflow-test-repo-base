@@ -43,7 +43,7 @@ jobs:
           echo "${{ needs.changes.outputs.backend }}"
           echo "${{ needs.changes.outputs.frontend }}"
           echo '${{ toJSON(job) }}'
-          echo '${{ toJSON(needs.output) }}'
+          echo '${{ toJSON(needs.outputs) }}'
           echo "after"
 
   backend-followup:

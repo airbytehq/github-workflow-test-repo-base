@@ -33,7 +33,7 @@ jobs:
   # JOB to build and test frontend code
   frontend:
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+#    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
           echo "${{ needs.changes.outputs.backend }}"
           echo "${{ needs.changes.outputs.frontend }}"
           echo '${{ toJSON(job) }}'
-          echo '${{ toJSON(needs) }}'
+          echo '${{ toJSON(needs.output) }}'
           echo "after"
 
   backend-followup:

@@ -21,7 +21,7 @@ jobs:
             frontend:
               - 'frontend-**/**'
             backend:
-              - 'backend-**/**'
+              - 'airbyte-!(frontend|webapp)/**'
 
   # JOB to build and test backend code
   backend:

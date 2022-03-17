@@ -2,9 +2,12 @@ name: Airbyte CI - Platform
 
 on:
   push:
+  schedule:
+    - cron: "*/5 * * * *"
 
 jobs:
   changes:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -26,7 +29,7 @@ jobs:
   # JOB to build and test backend code
   backend:
     needs: changes
-    if: needs.changes.outputs.backend == 'true'
+    if: needs.changes.outputs.backend == 'true' || (always() && github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

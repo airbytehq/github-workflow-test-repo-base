@@ -10,3 +10,5 @@ jobs:
     with:
       env_name: frontend-dev
       run_type: deploy
+      build_images: true
+      tests_integration: true

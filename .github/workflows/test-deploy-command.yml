@@ -52,30 +52,40 @@ on:
       env_name:
         type: string
         required: true
-      oss_reference:
-        required: false
+        default: "infra-dev"
+      oss_branch:
         type: string
+        required: false
         default: ""
+      oss_version:
+       type: string
+       required: false
+       default: string
       cloud_version:
-        default: ""
         type: string
         required: false
-      log_level:
-        required: false
-        type: string
-        default: "INFO"
+        default: string
       run_type:
         type: string
         required: true
-      endpoints:
-        type: boolean
+        default: "dry"
+      json:
+        type: string
         required: false
-        default: true
-      tests:
+        default: ""
+      comment-id:
+        type: string
+        description: "The comment-id of the slash command. Used to update the comment with the status."
+        required: false
+      build_images:
         type: boolean
         required: true
-        default: true
-      gsm:
+        default: false
+      tests_integration:
+        type: boolean
+        required: true
+        default: false
+      gsm_integration:
         type: boolean
         required: false
         default: false

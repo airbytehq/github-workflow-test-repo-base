@@ -152,7 +152,7 @@ jobs:
     
       - name: Parsing Inputs and set Variables
         id: input-and-variables
-        if: github.event_name == 'workflow_dispatch'
+#        if: github.event_name == 'workflow_dispatch'
         run: |-
           set -e
           case "${{ github.event.inputs.env_name }}" in

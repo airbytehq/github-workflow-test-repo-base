@@ -47,6 +47,39 @@ on:
         required: false
         default: "false"
 
+  workflow_call:
+    inputs:
+      env_name:
+        type: string
+        required: true
+      oss_reference:
+        required: false
+        type: string
+        default: ""
+      cloud_version:
+        default: ""
+        type: string
+        required: false
+      log_level:
+        required: false
+        type: string
+        default: "INFO"
+      run_type:
+        type: string
+        required: true
+      endpoints:
+        type: boolean
+        required: false
+        default: true
+      tests:
+        type: boolean
+        required: true
+        default: true
+      gsm:
+        type: boolean
+        required: false
+        default: false
+
 #
 # More information about the deployment process can be found here:
 #     https://github.com/airbytehq/airbyte-cloud/wiki/One-Click-Deploy-(Github-Actions)

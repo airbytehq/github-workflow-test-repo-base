@@ -9,7 +9,7 @@ jobs:
     name: Call "deploy-command" workflow
     uses: ./.github/workflows/test-deploy-command.yml
     with:
-      env_name: dev-2
+      env_name: "infra-dev"
       run_type: deploy
       tests_integration: false
       build_images: false

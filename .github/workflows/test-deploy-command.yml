@@ -104,6 +104,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Parsing input params
     steps:
+      - name: Checkout Airbyte
+        uses: actions/checkout@v2
+    
       - name: Parsing Inputs and set Variables
         id: input-and-variables
         if: github.event_name == 'workflow_dispatch'

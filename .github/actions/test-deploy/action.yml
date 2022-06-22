@@ -1,0 +1,196 @@
+name: 'Deploy Product Components to specified Environment'
+description: 'Deployment of Helm Chart to GKE Cluster and Updating of GCP Endpoints Configs'
+inputs:
+  env_name:
+    description: "Environment Name (infra-dev, dev, dev-1, dev-2, dev-3, frontend-dev, stage, prod)"
+    required: true
+  build_images:
+    description: "Build and Push Images. Only relevant when deploying from non-master branches. true or false."
+    required: true
+  gcp_sa_key:
+    required: true
+  #dockerhub_token:
+  #  required: true
+  #lastpass_token:
+  #  description: "LastPass Service Account token"
+  #  required: true
+  oss_version:
+    description: "Airbyte OSS Version (Either an official version like `0.35.63-alpha` or a branch-specific tag like `dev-abc123`)"
+    required: false
+  oss_branch_ref:
+    description: "OSS Branch Ref (Either a release tag like `v0.35.63-alpha` or a branch name like `dev/some-wip-feature`)"
+    required: false
+  cloud_version:
+    description: "Airbyte Cloud Version (optional -- defaults to form <oss_version>-<cloud_commit_short_tag>)"
+    required: false
+  namespace:
+    description: "Kubernetes Namespace"
+    required: true
+    default: "ab"
+  helm_release_name:
+    description: "Helm Release Name"
+    required: true
+    default: "airbyte"
+  helm_timeout:
+    description: "Helm Timeout"
+    required: true
+    default: "20m"
+  log_level:
+    description: "Log level the app should be deployed at (optional -- defaults to INFO) (FATAL, CRITICAL, ERROR, WARN, WARNING, INFO, DEBUG, TRACE) (case insensitive)"
+    required: false
+    default: "INFO"
+  run_type:
+    description: "Deployment type. Possible options: dry -- just simulate deployment and show generated K8s manifest | deploy -- simple deployment with automatic recovery in case of failure (common case) | no-rollback -- deployment without possibility to rollback (please be careful with that option)"
+    required: true
+    default: "dry"
+  gsm_integration:
+    description: "Run Secrets Management procedure (GSM,GKE)"
+    required: false
+  json:
+    description: 'Parameters in JSON format. For example: { "oss": "OSS Version", "ossbranch": "dev/some-branch", "cloud": "Cloud Version", "server": "aabbccd", "cloud-server": "eeffaab", "log": "error", "run": "deploy" }'
+    required: false
+    default: ""
+
+outputs:
+  oss_version:
+    value: ${{ steps.variables.outputs.oss_version }}
+  oss_branch_ref:
+    value: ${{ steps.variables.outputs.oss_branch_ref }}
+  cloud_version:
+    value: ${{ steps.variables.outputs.cloud_version }}
+  tag_server:
+    value: ${{ steps.variables.outputs.tag_server }}
+  tag_cloud_server:
+    value: ${{ steps.variables.outputs.tag_cloud-server }}
+  tag_cloud_partner_server:
+    value: ${{ steps.variables.outputs.tag_cloud-partner-server }}
+  tag_webapp:
+    value: ${{ steps.variables.outputs.tag_webapp }}
+  tag_billing:
+    value: ${{ steps.variables.outputs.tag_billing }}
+  cloud_branch_name:
+    value: ${{ steps.variables.outputs.cloud_branch_name }}
+  log_level:
+    value: ${{ steps.variables.outputs.log_level }}
+  run_type:
+    value: ${{ steps.variables.outputs.run_type }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: variables
+      run: |-
+        set -o xtrace
+        
+        echo "::set-output name=cloud_branch_name::${GITHUB_REF#refs/heads/}"
+        
+        oss_version="$(echo '${{ inputs.json }}' | jq --raw-output '.oss//""')"
+        if test -z $oss_version; then
+          oss_version="${{ inputs.oss_version }}"
+        fi
+        echo "::set-output name=oss_version::${oss_version}"
+        
+        oss_branch_ref="$(echo '${{ inputs.json }}' | jq --raw-output '.ossbranch//""')"
+        if test -z $oss_branch_ref; then
+          oss_branch_ref="${{ inputs.oss_branch_ref }}"
+        fi
+        echo "::set-output name=oss_branch_ref::${oss_branch_ref}"
+        
+        cloud_version="$(echo '${{ inputs.json }}' | jq --raw-output '.cloud//""')"
+        if test -z $cloud_version; then
+          cloud_version="${{ inputs.cloud_version }}"
+        fi
+        echo "::set-output name=cloud_version::${cloud_version}"
+        namespace="$(echo '${{ inputs.json }}' | jq --raw-output '.namespace//""')"
+        if test -z $namespace; then
+          namespace="${{ inputs.namespace }}"
+        fi
+        echo "::set-output name=namespace::${namespace}"
+        
+        helm_timeout="$(echo '${{ inputs.json }}' | jq --raw-output '.timeout//""')"
+        if test -z $helm_timeout; then
+          helm_timeout="${{ inputs.helm_timeout }}"
+        fi
+        echo "::set-output name=helm_timeout::${helm_timeout}"
+        helm_release_name="$(echo '${{ inputs.json }}' | jq --raw-output '.release//""')"
+        if test -z $helm_release_name; then
+          helm_release_name="${{ inputs.helm_release_name }}"
+        fi
+        if test $helm_release_name == 'airbyte'; then
+          echo "::set-output name=helm_release_name::${{ inputs.env_name }}-${helm_release_name}"
+        else
+          echo "::set-output name=helm_release_name::${helm_release_name}"
+        fi
+        log_level="$(echo '${{ inputs.json }}' | jq --raw-output '.log//""')"
+        if test -z $log_level; then
+          log_level="${{ inputs.log_level }}"
+        fi
+        echo "::set-output name=log_level::$(echo ${log_level} | tr '[:lower:]' '[:upper:]')"
+        run_type="$(echo '${{ inputs.json }}' | jq --raw-output '.run//""')"
+        if test -z $run_type; then
+          run_type="${{ inputs.run_type }}"
+        fi
+        endpoints_dry_run="false"
+        case "$run_type" in
+                  dry)
+                    helm_run_type="--dry-run"; endpoints_dry_run="true";;
+               deploy)
+                    helm_run_type="--atomic";;
+          no-rollback)
+                    helm_run_type="";;
+                    *)
+                    echo "::error::Incorrect run_type: ${run_type} specified!"; exit 1;;
+          esac
+        echo "::set-output name=helm_run_type::${helm_run_type}"; echo "::set-output name=run_type::${run_type}";
+        echo "::set-output name=endpoints_dry_run::${endpoints_dry_run}"
+        # ----------------------------------------
+        # The Processing and Forming of Image Tags
+        # ----------------------------------------
+        declare -a component_names=(server cloud-server cloud-partner-server billing bootloader cloud-bootloader)
+        helm_image_tags=""
+        for component in "${component_names[@]}"; do
+            component_tag="$(echo '${{ inputs.json }}' | jq --raw-output ".\"${component}\"//\"\"")"
+            [[ ! "$component_tag" ]] && component_tag="$cloud_version" 
+            helm_image_tags="$helm_image_tags --set ${component}.image.tag=${component_tag}"
+            echo "::set-output name=tag_${component}::${component_tag}"; done
+        # The processing of WebApp tag has to be separate because it has the environment mentioned in its name.
+        tag_webapp="$(echo '${{ inputs.json }}' | jq --raw-output '.webapp//""')"
+        [[ ! "${tag_webapp}" ]] && tag_webapp="cloud-${{ inputs.env_name }}-${cloud_version}"
+        helm_image_tags="$helm_image_tags --set webapp.image.tag=${tag_webapp}"
+        echo "::set-output name=tag_webapp::${tag_webapp}"
+        echo "::set-output name=helm_image_tags::${helm_image_tags}"
+      shell: bash
+
+    - name: Print processed Input Parameters
+      shell: bash
+      run: |-
+        set -o xtrace
+        
+        echo -e "
+                        env_name: ${{ inputs.env_name }}
+                       namespace: ${{ inputs.namespace }}
+               helm_release_name: ${{ inputs.helm_release_name }}
+                     oss_version: ${{ inputs.oss_version }}
+                  oss_branch_ref: ${{ inputs.oss_branch_ref }}
+                   cloud_version: ${{ inputs.cloud_version }}
+                      tag_server: ${{ inputs.tag_server }}
+                tag_cloud_server: ${{ inputs.tag_cloud_server }}
+        tag_cloud_partner_server: ${{ inputs.tag_cloud_partner_server }}
+                      tag_webapp: ${{ inputs.tag_webapp }}
+                        run_type: ${{ inputs.run_type }}
+                            json: ${{ inputs.json }}
+        
+                     oss_version: ${{ steps.variables.outputs.oss_version }}
+                  oss_branch_ref: ${{ steps.variables.outputs.oss_branch_ref }}
+                      tag_server: ${{ steps.variables.outputs.tag_server }}
+                tag_cloud_server: ${{ steps.variables.outputs.tag_cloud_server }}
+        tag_cloud_partner_server: ${{ steps.variables.outputs.tag_cloud_partner_server }}
+                     tag_billing: ${{ steps.variables.outputs.tag_billing }}
+                      tag_webapp: ${{ steps.variables.outputs.tag_webapp }}
+                 helm_image_tags: ${{ steps.variables.outputs.helm_image_tags }}
+        
+#             OSS version in File: $(grep AIRBYTE_VERSION .env | awk -F= '{print $2}')
+                       log_level: ${{ steps.variables.outputs.log_level }}
+                   helm_run_type: ${{ steps.variables.outputs.helm_run_type }}
+               endpoints_dry_run: ${{ steps.variables.outputs.endpoints_dry_run }}
+        "

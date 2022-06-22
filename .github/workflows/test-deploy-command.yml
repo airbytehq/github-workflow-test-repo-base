@@ -46,7 +46,6 @@ on:
         description: "Run Secrets Management procedure (GSM,GKE)"
         required: false
         default: "false"
-
   workflow_call:
     inputs:
       env_name:

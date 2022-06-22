@@ -46,6 +46,7 @@ on:
         description: "Run Secrets Management procedure (GSM,GKE)"
         required: false
         default: "false"
+        
   workflow_call:
     inputs:
       env_name:
@@ -59,11 +60,11 @@ on:
       oss_version:
         type: string
         required: false
-        default: string
+        default: ""
       cloud_version:
         type: string
         required: false
-        default: string
+        default: ""
       run_type:
         type: string
         required: true
@@ -111,15 +112,15 @@ jobs:
           echo -e "
                           Checking if params were passed via workflow_call:
                           
-                          env_name: ${{ inputs.env_name }}
-                          run_type: ${{ inputs.run_type }}
-                          oss_branch: ${{ inputs.oss_branch }}
-                          oss_version: ${{ inputs.oss_version }}
-                          cloud_version: ${{ inputs.cloud_version }}
-                          json: ${{ inputs.json }}
-                          build_images: ${{ inputs.build_images }}
-                          tests_integration: ${{ inputs.tests_integration }}
-                          gsm_integration: ${{ inputs.gsm_integration }}              
+                          env_name: ${{ github.event.inputs.env_name }}
+                          run_type: ${{ github.event.inputs.run_type }}
+                          oss_branch: ${{ github.event.inputs.oss_branch }}
+                          oss_version: ${{ github.event.inputs.oss_version }}
+                          cloud_version: ${{ github.event.inputs.cloud_version }}
+                          json: ${{ github.event.inputs.json }}
+                          build_images: ${{ github.event.inputs.build_images }}
+                          tests_integration: ${{ github.event.inputs.tests_integration }}
+                          gsm_integration: ${{ github.event.inputs.gsm_integration }}              
           "
           
       - name: Set Outputs

@@ -10,6 +10,6 @@ jobs:
     uses: ./.github/workflows/test-deploy-command.yml
     with:
       env_name: "infra-dev"
-      run_type: deploy
+      run_type: "deploy"
       tests_integration: false
       build_images: false

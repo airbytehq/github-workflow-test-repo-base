@@ -106,7 +106,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-     
+        
+      - name: Checking input params 
+        if: ${{ github.event_name == 'workflow_call' }} 
+        run: |-
+          set -o xtrace
+
+          echo -e "
+                          Checking if params were passed via workflow_call:
+                          
+                          env_name: ${{ github.event.inputs.env_name }}
+                          run_type: ${{ github.event.inputs.run_type }}
+          "
+          
       - name: Set Outputs
         id: set-outputs
         run: |-

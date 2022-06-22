@@ -61,6 +61,9 @@ jobs:
       oss_branch_ref: ${{ steps.set-outputs.outputs.oss_branch_ref }}
       cloud_version: ${{ steps.set-outputs.outputs.cloud_version }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+     
       - name: Set Outputs
         id: set-outputs
         run: |-

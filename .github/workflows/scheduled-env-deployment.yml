@@ -1,14 +1,26 @@
 name: Execute 'parent' workflow
 
 on:
-  workflow_dispatch:
+  schedule:
+  - cron: '15,45 * * * *'
+  - cron: '0,30 * * * *'
 
 jobs:
-  call-env-deploy:
-    name: Call "deploy-command" workflow
+  deploy-frontend-dev:
+    name: Call "deploy-command" workflow for frontend-dev
+    if: github.event.schedule == '15,45 * * * *'
     uses: ./.github/workflows/test-deploy-command.yml
     with:
       env_name: frontend-dev
       run_type: deploy
       build_images: true
       tests_integration: true
+  deploy-dev-2:
+    name: Call "deploy-command" workflow for dev-2
+    if: github.event.schedule == '0,30 * * * *'
+    uses: ./.github/workflows/test-deploy-command.yml
+    with:
+      env_name: dev-2
+      run_type: dry
+      build_images: false
+      tests_integration: false

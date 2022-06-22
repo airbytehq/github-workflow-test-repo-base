@@ -2,7 +2,7 @@ name: Update 'dev-2' env cluster on daily basis
 
 on:
   schedule:
-    - cron:  '35 16 * * *'
+    - cron:  '*/5 * * * *'
 
 jobs:
   call-env-deploy:

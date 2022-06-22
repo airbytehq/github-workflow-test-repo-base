@@ -51,23 +51,23 @@ on:
     inputs:
       env_name:
         type: string
-        required: true
+        required: false
         default: "infra-dev"
       oss_branch:
         type: string
         required: false
         default: ""
       oss_version:
-       type: string
-       required: false
-       default: string
+        type: string
+        required: false
+        default: string
       cloud_version:
         type: string
         required: false
         default: string
       run_type:
         type: string
-        required: true
+        required: false
         default: "dry"
       json:
         type: string
@@ -79,11 +79,11 @@ on:
         required: false
       build_images:
         type: boolean
-        required: true
+        required: false
         default: false
       tests_integration:
         type: boolean
-        required: true
+        required: false
         default: false
       gsm_integration:
         type: boolean
@@ -152,7 +152,6 @@ jobs:
     
       - name: Parsing Inputs and set Variables
         id: input-and-variables
-#        if: github.event_name == 'workflow_dispatch'
         run: |-
           set -e
           case "${{ github.event.inputs.env_name }}" in

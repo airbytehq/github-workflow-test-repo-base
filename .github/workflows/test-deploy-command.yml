@@ -50,7 +50,7 @@ on:
     inputs:
       env_name:
         type: string
-        required: false
+        required: true
         default: "infra-dev"
       oss_branch:
         type: string
@@ -66,7 +66,7 @@ on:
         default: string
       run_type:
         type: string
-        required: false
+        required: true
         default: "dry"
       json:
         type: string
@@ -78,11 +78,11 @@ on:
         required: false
       build_images:
         type: boolean
-        required: false
+        required: true
         default: false
       tests_integration:
         type: boolean
-        required: false
+        required: true
         default: false
       gsm_integration:
         type: boolean
@@ -113,6 +113,13 @@ jobs:
                           
                           env_name: ${{ inputs.env_name }}
                           run_type: ${{ inputs.run_type }}
+                          oss_branch: ${{ inputs.oss_branch }}
+                          oss_version: ${{ inputs.oss_version }}
+                          cloud_version: ${{ inputs.cloud_version }}
+                          json: ${{ inputs.json }}
+                          build_images: ${{ inputs.build_images }}
+                          tests_integration: ${{ inputs.tests_integration }}
+                          gsm_integration: ${{ inputs.gsm_integration }}              
           "
           
       - name: Set Outputs

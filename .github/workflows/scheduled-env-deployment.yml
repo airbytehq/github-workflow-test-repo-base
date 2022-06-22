@@ -7,3 +7,6 @@ jobs:
   call-env-deploy:
     name: Call "deploy-command" workflow
     uses: ./.github/workflows/test-deploy-command.yml
+    with:
+      env_name: frontend-dev
+      run_type: deploy

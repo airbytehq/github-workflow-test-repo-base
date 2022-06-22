@@ -1,8 +1,7 @@
-name: Update 'dev-2' env cluster on daily basis
+name: Execute 'parent' workflow
 
 on:
-  schedule:
-    - cron:  '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   call-env-deploy:

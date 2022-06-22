@@ -188,8 +188,6 @@ runs:
                      tag_billing: ${{ steps.variables.outputs.tag_billing }}
                       tag_webapp: ${{ steps.variables.outputs.tag_webapp }}
                  helm_image_tags: ${{ steps.variables.outputs.helm_image_tags }}
-        
-#             OSS version in File: $(grep AIRBYTE_VERSION .env | awk -F= '{print $2}')
                        log_level: ${{ steps.variables.outputs.log_level }}
                    helm_run_type: ${{ steps.variables.outputs.helm_run_type }}
                endpoints_dry_run: ${{ steps.variables.outputs.endpoints_dry_run }}

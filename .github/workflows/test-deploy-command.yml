@@ -121,7 +121,7 @@ jobs:
           
       - name: Helm Chart is being deployed to GKE Cluster and GCP Endpoints Configs are being uppdated
         id: deploy
-        uses: ./.github/actions/deploy
+        uses: ./.github/actions/test-deploy
         with:
           env_name: ${{ github.event.inputs.env_name }}
           oss_version: ${{ needs.set-oss-and-cloud-version-vars.outputs.oss_version }}

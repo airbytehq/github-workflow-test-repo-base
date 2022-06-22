@@ -75,7 +75,6 @@ on:
         default: ""
       comment-id:
         type: string
-        description: "The comment-id of the slash command. Used to update the comment with the status."
         required: false
       build_images:
         type: boolean
@@ -112,15 +111,15 @@ jobs:
           echo -e "
                           Checking if params were passed via workflow_call:
                           
-                          env_name: ${{ github.event.inputs.env_name }}
-                          run_type: ${{ github.event.inputs.run_type }}
-                          oss_branch: ${{ github.event.inputs.oss_branch }}
-                          oss_version: ${{ github.event.inputs.oss_version }}
-                          cloud_version: ${{ github.event.inputs.cloud_version }}
-                          json: ${{ github.event.inputs.json }}
-                          build_images: ${{ github.event.inputs.build_images }}
-                          tests_integration: ${{ github.event.inputs.tests_integration }}
-                          gsm_integration: ${{ github.event.inputs.gsm_integration }}              
+                          env_name: ${{ inputs.env_name }}
+                          run_type: ${{ inputs.run_type }}
+                          oss_branch: ${{ inputs.oss_branch }}
+                          oss_version: ${{ inputs.oss_version }}
+                          cloud_version: ${{ inputs.cloud_version }}
+                          json: ${{ inputs.json }}
+                          build_images: ${{ inputs.build_images }}
+                          tests_integration: ${{ inputs.tests_integration }}
+                          gsm_integration: ${{ inputs.gsm_integration }}              
           "
           
       - name: Set Outputs
@@ -133,16 +132,16 @@ jobs:
           #--------------------------------------------------------------------
           
           # If oss_version input, assume it is an official release with a corresponding tag that should be used as the oss_branch
-          if test -n "${{ github.event.inputs.oss_version }}"
+          if test -n "${{ inputs.oss_version }}"
           then
-            ossVersion="${{ github.event.inputs.oss_version }}"
-            ossBranchRef="v${{ github.event.inputs.oss_version }}"
+            ossVersion="${{ inputs.oss_version }}"
+            ossBranchRef="v${{ inputs.oss_version }}"
           
           # Else if oss_branch input, set oss_version to the generated oss_branch tag, and set the output oss_branch_ref to the input oss_branch directly 
-          elif test -n "${{ github.event.inputs.oss_branch }}"
+          elif test -n "${{ inputs.oss_branch }}"
           then
             ossVersion="${{ needs.generate-oss-branch-tag.outputs.oss_branch_tag }}"
-            ossBranchRef="${{ github.event.inputs.oss_branch }}"
+            ossBranchRef="${{ inputs.oss_branch }}"
           
           # Else, no oss_branch or oss_version input was provided, so use defaults from earlier step
           else

@@ -1,0 +1,15 @@
+name: Update 'dev-2' env cluster on daily basis
+
+on:
+  schedule:
+    # Runs at 05:30 AM (UTC) every day (Check https://crontab.guru/)
+    - cron:  '0 16 * * *'
+
+jobs:
+  call-env-deploy:
+    name: Call "deploy-command" workflow
+    uses: ./.github/workflows/test-deploy-command.yml
+    with:
+      env_name: dev-2
+      run_type: deploy
+      tests_integration: true

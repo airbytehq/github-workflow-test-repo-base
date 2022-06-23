@@ -168,7 +168,7 @@ jobs:
             ossRef="v${{ inputs.oss_reference}}"
           
           # Else if oss_branch input, set oss_version to the generated oss_branch tag, and set the output oss_branch_ref to the input oss_branch directly 
-          
+          fi
           echo "::set-output name=oss_reference::$ossRef"
           echo "::set-output name=cloud_version::$cloudVersion"
           

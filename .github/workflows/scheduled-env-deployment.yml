@@ -13,7 +13,6 @@ jobs:
     with:
       env_name: frontend-dev
       run_type: deploy
-      build_images: true
       tests: true
   deploy-dev-2:
     name: Call "deploy-command" workflow for dev-2
@@ -22,5 +21,4 @@ jobs:
     with:
       env_name: dev-2
       run_type: dry
-      build_images: false
       tests: false

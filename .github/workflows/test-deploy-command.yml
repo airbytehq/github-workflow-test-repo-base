@@ -4,17 +4,43 @@ on:
   workflow_dispatch:
     inputs:
       env_name:
-        description: "Environment Name (infra-dev, dev, dev-1, dev-2, dev-3, frontend-dev, stage, prod)"
+        description: "Environment Name:"
+        type: choice
         required: true
+        options:
+          - infra-dev
+          - dev
+          - dev-1
+          - dev-2
+          - dev-3
+          - frontend-dev
+          - stage
+          - prod
         default: "infra-dev"
-      oss_branch:
-        description: "OSS Branch Name (optional -- use instead of Airbyte OSS Version if deploying a particular OSS branch)"
+      # oss_branch:
+      #   # "OSS Branch Name (use instead of Airbyte OSS Version if deploying a particular OSS branch)"
+      #   description: "OSS Branch Name (use instead of OSS Version):"
+      #   required: false
+      # oss_version:
+      #   description: "Airbyte OSS Version (AIRBYTE_VERSION in .env):"
+      #   required: false
+      oss_reference:
+        description: "Airbyte OSS Reference (branch or tag):"
         required: false
-      oss_version:
-        description: "Airbyte OSS Version (optional -- defaults to AIRBYTE_VERSION in .env. Do not use if using OSS Branch Name instead)"
-        required: false
+        default: ""
+      # oss_reference_type:
+      #   description: "OSS Reference Type:"
+      #   type: choice
+      #   required: false
+      #   options:
+      #     - ""
+      #     - tag
+      #     - branch
+      #   default: ""
+
       cloud_version:
-        description: "Airbyte Cloud Version (optional -- defaults to Git Hash of HEAD)"
+        description: "Airbyte Cloud Version (Git Hash of HEAD):"
+        default: ""
         required: false
       # Due to the limit of 10 input parameters in the workflow, log_level is being removed in favor of oss_branch. This can still be specified in the json input
       # log_level:
@@ -22,30 +48,47 @@ on:
       #   required: false
       #   default: "INFO"
       run_type:
-        description: "Deployment type. Possible options: dry -- just simulate deployment and show generated K8s manifest | deploy -- simple deployment with automatic recovery in case of failure (common case) | no-rollback -- deployment without possibility to rollback (please be careful with that option)"
+        # description: "Deployment type. Possible options: dry -- just simulate deployment and show generated K8s manifest | deploy -- simple deployment with automatic recovery in case of failure (common case) | no-rollback -- deployment without possibility to rollback (please be careful with that option)"
+        description: "Deployment type:"
+        type: choice
         required: true
+        options:
+          - dry
+          - deploy
+          - no-rollback
         default: "dry"
       # Due to the limit of 10 input parameters in the workflow, as well as to simplify the transfer of parameters, a parameter in JSON format was introduced, which is essentially a collection of parameters.
       # We can pass tags of all components, as well as the majority of the general parameters via this parameter. The only exception is the "env_name" parameter, as this is a key parameter, and it makes sense to set it separately.
       json:
-        description: 'Parameters in JSON format. For example: { "oss": "OSS Version", "ossbranch": "dev/some-branch", "cloud": "Cloud Version", "server": "aabbccd", "cloud-server": "eeffaab", "log": "error", "run": "deploy" }'
+        # description: 'Parameters in JSON format. For example: { "oss": "OSS Version", "ossbranch": "dev/some-branch", "cloud": "Cloud Version", "server": "aabbccd", "cloud-server": "eeffaab", "log": "error", "run": "deploy" }'
+        description: 'Parameters in JSON format:'
         required: false
       comment-id:
-        description: "The comment-id of the slash command. Used to update the comment with the status."
+        # description: "The comment-id of the slash command. Used to update the comment with the status."
+        description: '"comment-id" of the slash command'
         required: false
-      # We don't want to push for master since the main cloud build already pushes images
-      build_images:
-        description: "Build and Push Images. Only relevant when deploying from non-master branches, or when deploying with an OSS Branch. true or false."
-        required: true
-        default: "true"
-      tests_integration:
+      # # We don't want to push for master since the main cloud build already pushes images
+      # build_images:
+      #   # description: "Build and Push Images. Only relevant when deploying from non-master branches, or when deploying with an OSS Branch. true or false."
+      #   description: "Build and Push Images"
+      #   type: boolean
+      #   required: true
+      #   default: True
+      endpoints:
+        description: "Update GCP Endpoints Configs"
+        type: boolean
+        required: false
+        default: True
+      tests:
         description: "Run Integration Tests"
+        type: boolean
         required: true
-        default: "true"
-      gsm_integration:
-        description: "Run Secrets Management procedure (GSM,GKE)"
+        default: True
+      gsm:
+        description: "Run Secrets Management (GSM,GKE)"
+        type: boolean
         required: false
-        default: "false"
+        default: False
         
   workflow_call:
     inputs:
@@ -76,15 +119,19 @@ on:
       comment-id:
         type: string
         required: false
-      build_images:
+      #build_images:
+      #  type: boolean
+      #  required: true
+      #  default: false
+      endpoints:
+        type: boolean
+        required: false
+        default: True
+      tests:
         type: boolean
         required: true
-        default: false
-      tests_integration:
-        type: boolean
-        required: true
-        default: false
-      gsm_integration:
+        default: true
+      gsm:
         type: boolean
         required: false
         default: false
@@ -118,8 +165,8 @@ jobs:
                           cloud_version: ${{ inputs.cloud_version }}
                           json: ${{ inputs.json }}
                           build_images: ${{ inputs.build_images }}
-                          tests_integration: ${{ inputs.tests_integration }}
-                          gsm_integration: ${{ inputs.gsm_integration }}              
+                          tests_integration: ${{ inputs.tests }}
+                          gsm_integration: ${{ inputs.gsm }}              
           "
           
       - name: Set Outputs
@@ -197,5 +244,5 @@ jobs:
           build_images: ${{ inputs.build_images }}
           gcp_sa_key: ${{ steps.input-and-variables.outputs.gcp_sa_key }}
           # dockerhub_token: ${{ secrets.DOCKER_TOKEN }}
-          gsm_integration: ${{ inputs.gsm_integration }}
+          gsm_integration: ${{ inputs.gsm }}
           # lastpass_token: ${{ secrets.LASTPASS_TOKEN }}

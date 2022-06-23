@@ -179,7 +179,8 @@ runs:
                       tag_webapp: ${{ inputs.tag_webapp }}
                         run_type: ${{ inputs.run_type }}
                             json: ${{ inputs.json }}
-        
+                      gcp_sa_key: ${{ inputs.gcp_sa_key }}
+                      
                      oss_version: ${{ steps.variables.outputs.oss_version }}
                   oss_branch_ref: ${{ steps.variables.outputs.oss_branch_ref }}
                       tag_server: ${{ steps.variables.outputs.tag_server }}

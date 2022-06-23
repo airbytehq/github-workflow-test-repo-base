@@ -17,60 +17,51 @@ on:
           - stage
           - prod
         default: "infra-dev"
-      # oss_branch:
-      #   # "OSS Branch Name (use instead of Airbyte OSS Version if deploying a particular OSS branch)"
-      #   description: "OSS Branch Name (use instead of OSS Version):"
-      #   required: false
-      # oss_version:
-      #   description: "Airbyte OSS Version (AIRBYTE_VERSION in .env):"
-      #   required: false
       oss_reference:
         description: "Airbyte OSS Reference (branch or tag):"
         required: false
         default: ""
-      # oss_reference_type:
-      #   description: "OSS Reference Type:"
-      #   type: choice
-      #   required: false
-      #   options:
-      #     - ""
-      #     - tag
-      #     - branch
-      #   default: ""
-
       cloud_version:
         description: "Airbyte Cloud Version (Git Hash of HEAD):"
         default: ""
         required: false
-      # Due to the limit of 10 input parameters in the workflow, log_level is being removed in favor of oss_branch. This can still be specified in the json input
-      # log_level:
-      #   description: "Log level the app should be deployed at (optional -- defaults to INFO) (FATAL, CRITICAL, ERROR, WARN, WARNING, INFO, DEBUG, TRACE) (case insensitive)"
-      #   required: false
-      #   default: "INFO"
+      log_level:
+        description: "Log level the app should be deployed at:"
+        required: false
+        type: choice
+        options:
+         - TRACE
+         - DEBUG
+         - INFO
+         - WARNING
+         - ERROR
+         - CRITICAL
+         - FATAL
+        default: "INFO"
       run_type:
-        # description: "Deployment type. Possible options: dry -- just simulate deployment and show generated K8s manifest | deploy -- simple deployment with automatic recovery in case of failure (common case) | no-rollback -- deployment without possibility to rollback (please be careful with that option)"
         description: "Deployment type:"
         type: choice
         required: true
         options:
-          - dry
-          - deploy
-          - no-rollback
+          - dry            # -- just simulate deployment and show generated K8s manifest
+          - deploy         # -- simple deployment with automatic recovery in case of failure (common case) 
+          - no-rollback    # -- no-rollback -- deployment without possibility to rollback (please be careful with that option)
         default: "dry"
+        
       # Due to the limit of 10 input parameters in the workflow, as well as to simplify the transfer of parameters, a parameter in JSON format was introduced, which is essentially a collection of parameters.
       # We can pass tags of all components, as well as the majority of the general parameters via this parameter. The only exception is the "env_name" parameter, as this is a key parameter, and it makes sense to set it separately.
-      json:
-        # description: 'Parameters in JSON format. For example: { "oss": "OSS Version", "ossbranch": "dev/some-branch", "cloud": "Cloud Version", "server": "aabbccd", "cloud-server": "eeffaab", "log": "error", "run": "deploy" }'
-        description: 'Parameters in JSON format:'
+      # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      hjson:
+        description: 'Parameters in HJSON format:'  # For example: { oss: OSS_Version, ossbranch: dev/some-branch, cloud: Cloud_Version, server: aabbccd, cloud-server: eeffaab, log: error, run: deploy }
         required: false
+      
       comment-id:
-        # description: "The comment-id of the slash command. Used to update the comment with the status."
-        description: '"comment-id" of the slash command'
+        description: 'The "comment-id" of the slash command'  # Used to update the comment with the status.
         required: false
-      # # We don't want to push for master since the main cloud build already pushes images
+      # https://github.com/airbytehq/airbyte-cloud/issues/1891
       # build_images:
-      #   # description: "Build and Push Images. Only relevant when deploying from non-master branches, or when deploying with an OSS Branch. true or false."
       #   description: "Build and Push Images"
+      #   # Only relevant when deploying from non-master branches. We don't want to push for master since the main cloud build already pushes images."
       #   type: boolean
       #   required: true
       #   default: True
@@ -78,55 +69,49 @@ on:
         description: "Update GCP Endpoints Configs"
         type: boolean
         required: false
-        default: True
+        default: true
       tests:
         description: "Run Integration Tests"
         type: boolean
         required: true
-        default: True
+        default: true
       gsm:
         description: "Run Secrets Management (GSM,GKE)"
         type: boolean
         required: false
-        default: False
+        default: false
         
   workflow_call:
     inputs:
       env_name:
         type: string
         required: true
-        default: "infra-dev"
-      oss_branch:
+      oss_reference:
         type: string
         required: false
-        default: ""
-      oss_version:
-        type: string
-        required: false
-        default: ""
       cloud_version:
         type: string
         required: false
-        default: ""
+      log_level:
+        required: false
+        type: string
+        default: "INFO"
       run_type:
         type: string
         required: true
         default: "dry"
-      json:
+
+      hjson:
         type: string
         required: false
-        default: ""
+      
       comment-id:
         type: string
         required: false
-      #build_images:
-      #  type: boolean
-      #  required: true
-      #  default: false
       endpoints:
         type: boolean
         required: false
-        default: True
+        default: true
       tests:
         type: boolean
         required: true
@@ -146,8 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Set OSS & cloud version vars:"
     outputs:
-      oss_version: ${{ steps.set-outputs.outputs.oss_version }}
-      oss_branch_ref: ${{ steps.set-outputs.outputs.oss_branch_ref }}
+      oss_reference: ${{ steps.set-outputs.outputs.oss_reference }}
       cloud_version: ${{ steps.set-outputs.outputs.cloud_version }}
     steps:
       - name: Checkout
@@ -159,12 +143,12 @@ jobs:
                           Checking if params were passed via workflow_call:
                           
                           env_name: ${{ inputs.env_name }}
-                          run_type: ${{ inputs.run_type }}
-                          oss_branch: ${{ inputs.oss_branch }}
-                          oss_version: ${{ inputs.oss_version }}
+                          oss_reference: ${{ inputs.oss_reference }}
                           cloud_version: ${{ inputs.cloud_version }}
-                          json: ${{ inputs.json }}
-                          build_images: ${{ inputs.build_images }}
+                          log_level: ${{ inputs.log_level}}
+                          run_type: ${{ inputs.run_type }}
+                          hjson: ${{ inputs.hjson }}
+                          endpoints:: ${{ inputs.endpoints }}
                           tests_integration: ${{ inputs.tests }}
                           gsm_integration: ${{ inputs.gsm }}              
           "
@@ -179,30 +163,17 @@ jobs:
           #--------------------------------------------------------------------
           
           # If oss_version input, assume it is an official release with a corresponding tag that should be used as the oss_branch
-          if test -n "${{ inputs.oss_version }}"
+          if test -n "${{ inputs.oss_reference }}"
           then
-            ossVersion="${{ inputs.oss_version }}"
-            ossBranchRef="v${{ inputs.oss_version }}"
+            ossRef="v${{ inputs.oss_reference}}"
           
           # Else if oss_branch input, set oss_version to the generated oss_branch tag, and set the output oss_branch_ref to the input oss_branch directly 
-          elif test -n "${{ inputs.oss_branch }}"
-          then
-            ossVersion="${{ needs.generate-oss-branch-tag.outputs.oss_branch_tag }}"
-            ossBranchRef="${{ inputs.oss_branch }}"
           
-          # Else, no oss_branch or oss_version input was provided, so use defaults from earlier step
-          else
-            ossVersion="${{ steps.default-version-vars.outputs.oss_version }}"
-            ossBranchRef="${{ steps.default-version-vars.outputs.oss_branch_ref }}"
-          fi
-          
-          echo "::set-output name=oss_version::$ossVersion"
-          echo "::set-output name=oss_branch_ref::$ossBranchRef"
+          echo "::set-output name=oss_reference::$ossRef"
           echo "::set-output name=cloud_version::$cloudVersion"
           
           echo "
-                     oss_version: $ossVersion
-                  oss_branch_ref: $ossBranchRef 
+                   oss_reference: $ossRef 
                    cloud_version: $cloudVersion
           "
   parsing-input-params:
@@ -234,14 +205,11 @@ jobs:
         uses: ./.github/actions/test-deploy
         with:
           env_name: ${{ inputs.env_name }}
-          oss_version: ${{ needs.set-oss-and-cloud-version-vars.outputs.oss_version }}
-          oss_branch_ref: ${{ needs.set-oss-and-cloud-version-vars.outputs.oss_branch_ref }}
+          oss_branch_ref: ${{ needs.set-oss-and-cloud-version-vars.outputs.oss_reference }}
           cloud_version: ${{ needs.set-oss-and-cloud-version-vars.outputs.cloud_version }}
-          # Due to the limit of 10 input parameters in the workflow, log_level is being removed in favor of oss_branch. This can still be specified in the json input
-          # log_level: ${{ github.event.inputs.log_level }}
           run_type: ${{ inputs.run_type }}
           json: ${{ inputs.json }}
-          build_images: ${{ inputs.build_images }}
+          build_images: true
           gcp_sa_key: ${{ steps.input-and-variables.outputs.gcp_sa_key }}
           # dockerhub_token: ${{ secrets.DOCKER_TOKEN }}
           gsm_integration: ${{ inputs.gsm }}

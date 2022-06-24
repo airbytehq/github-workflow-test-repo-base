@@ -142,6 +142,8 @@ jobs:
           echo -e "
                           Checking if params were passed via workflow_call:
                           
+                          Trigger: ${{ github.event_name }}
+                          
                           env_name: ${{ inputs.env_name }}
                           oss_reference: ${{ inputs.oss_reference }}
                           cloud_version: ${{ inputs.cloud_version }}
@@ -150,7 +152,7 @@ jobs:
                           hjson: ${{ inputs.hjson }}
                           endpoints:: ${{ inputs.endpoints }}
                           tests_integration: ${{ inputs.tests }}
-                          gsm_integration: ${{ inputs.gsm }}              
+                          gsm_integration: ${{ inputs.gsm }}          
           "
           
       - name: Set Outputs
@@ -185,7 +187,6 @@ jobs:
     
       - name: Parsing Inputs and set Variables
         id: input-and-variables
-        if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
         run: |-
           set -e
           case "${{ inputs.env_name }}" in

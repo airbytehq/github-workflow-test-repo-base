@@ -1,7 +1,6 @@
 name: Execute 'parent' workflow
 
 on:
-  workflow_dispatch:
   schedule:
   - cron: '15,45 * * * *'
   - cron: '0,30 * * * *'
@@ -9,7 +8,7 @@ on:
 jobs:
   deploy-frontend-dev:
     name: Call "deploy-command" workflow for frontend-dev
-    #if: github.event.schedule == '15,45 * * * *'
+    if: github.event.schedule == '15,45 * * * *'
     uses: ./.github/workflows/test-deploy-command.yml
     with:
       env_name: frontend-dev

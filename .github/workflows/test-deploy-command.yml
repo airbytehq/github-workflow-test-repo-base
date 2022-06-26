@@ -216,3 +216,4 @@ jobs:
           # dockerhub_token: ${{ secrets.DOCKER_TOKEN }}
           gsm_integration: ${{ inputs.gsm }}
           # lastpass_token: ${{ secrets.LASTPASS_TOKEN }}
+          slackbot_token: ${{ secrets.SLACK_BOT_TOKEN_AIRBYTE_TEAM }}
